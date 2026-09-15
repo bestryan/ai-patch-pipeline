@@ -3,17 +3,17 @@ import json
 import sys
 from google import genai
 
-# 1. Check API key presence
+# 1. Retrieve environment variable
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     print("ERROR: GEMINI_API_KEY environment variable is missing or empty.")
     sys.exit(1)
 
 try:
-    # 2. Initialize the modern GenAI Client
+    # 2. Instantiate modern Client
     client = genai.Client(api_key=api_key)
 
-    # 3. Verify scan file exists
+    # 3. Verify scan results exist
     if not os.path.exists('trivy-results.json'):
         print("ERROR: trivy-results.json not found!")
         sys.exit(1)
@@ -29,9 +29,9 @@ try:
     Report Data: {json.dumps(scan_data)[:2000]}
     """
 
-    # 4. Generate summary using gemini-2.5-flash
+    # 4. Generate content using the updated active model string
     response = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-3.6-flash',
         contents=prompt
     )
 
