@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import time
 from google import genai
 
 # 1. Retrieve environment variable
@@ -10,7 +11,7 @@ if not api_key:
     sys.exit(1)
 
 try:
-    # 2. Instantiate modern Client
+    # 2. Instantiate Client
     client = genai.Client(api_key=api_key)
 
     # 3. Verify scan results exist
@@ -29,14 +30,38 @@ try:
     Report Data: {json.dumps(scan_data)[:2000]}
     """
 
-    # 4. Generate content using the updated active model string
-    response = client.models.generate_content(
-        model='gemini-3.6-flash',
-        contents=prompt
-    )
+    # 4. List of candidate models to try
+    models_to_try = ['gemini-2.5-flash', 'gemini-1.5-flash']
+    response = None
 
-    print("\n=== AI SECURITY SUMMARY ===")
-    print(response.text)
+    for model_name in models_to_try:
+        # Retry loop for capacity/503 issues
+        for attempt in range(3):
+            try:
+                print(f"Attempting triage with model: {model_name} (Attempt {attempt + 1})...")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
+                if response:
+                    break
+            except Exception as err:
+                if "503" in str(err) or "UNAVAILABLE" in str(err):
+                    print(f"Server busy (503). Retrying in 5 seconds...")
+                    time.sleep(5)
+                else:
+                    # If model not found or another error, break to try next model
+                    print(f"Notice for {model_name}: {str(err)}")
+                    break
+        if response:
+            break
+
+    if response:
+        print("\n=== AI SECURITY SUMMARY ===")
+        print(response.text)
+    else:
+        print("CRITICAL ERROR: All AI model endpoints were unavailable.")
+        sys.exit(1)
 
 except Exception as e:
     print(f"CRITICAL ERROR in AI Script: {str(e)}")
