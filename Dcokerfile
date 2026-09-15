@@ -1,0 +1,4 @@
+FROM node:14-alpine
+WORKDIR /app
+RUN echo 'console.log("App running...");' > index.js
+CMD ["node", "index.js"]
