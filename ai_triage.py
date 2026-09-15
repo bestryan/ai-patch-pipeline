@@ -1,20 +1,16 @@
 import os
 import json
 import sys
-import google.generativeai as genai
+from google import genai
 
-# 1. Verify environment variable exists
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    print("ERROR: GEMINI_API_KEY environment variable is missing or empty.")
+    print("ERROR: GEMINI_API_KEY environment variable is missing!")
     sys.exit(1)
 
 try:
-    genai.configure(api_key=api_key)
-    # Use updated model string syntax
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    client = genai.Client(api_key=api_key)
 
-    # 2. Check if Trivy results file exists
     if not os.path.exists('trivy-results.json'):
         print("ERROR: trivy-results.json not found!")
         sys.exit(1)
@@ -30,10 +26,14 @@ try:
     Report Data: {json.dumps(scan_data)[:2000]}
     """
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt
+    )
+
     print("\n=== AI SECURITY SUMMARY ===")
     print(response.text)
 
 except Exception as e:
-    print(f"CRITICAL ERROR in AI Script: {str(e)}")
-    sys.exit(1)
+        print(f"CRITICAL ERROR in AI Script: {str(e)}")
+        sys.exit(1)
