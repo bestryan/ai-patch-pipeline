@@ -13,6 +13,7 @@ jobs:
           image-ref: 'node:14-alpine'
           format: 'json'
           output: 'trivy-results.json'
+          exit-code: '0'
       - name: Run AI Triage
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
